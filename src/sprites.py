@@ -1,5 +1,5 @@
 from settings import *
-from math import sin, cos, pi
+from math import sin, cos, pi, atan
 
 def rectanglePoints(x, y, w, h, rotation):
     p1 = ((((w * cos(rotation)) + (h * sin(rotation)))/2) + x, ((((h * cos(rotation)) + (-w * sin(rotation)))/2) + y))
@@ -47,6 +47,9 @@ class PlayerTank(Tank):
             self.move(TANKSPEED) # change arbitrary value
         if keys[pg.K_s]:
             self.move(-TANKSPEED) # change arbitrary value
+        self.turret.rotate(pg.mouse.get_pos())
+        if pg.mouse.get_pressed()[0] == 1:
+            self.turret.shoot()
 
 class AI_Tank(Tank):
     def __init__(self, x, y, colour):
@@ -57,23 +60,44 @@ class AI_Tank(Tank):
 class Turret():
     def __init__(self, tank):
         self.tank = tank
-    def rotate(self, speed):
-        pass
+        self.rotation = self.tank.rotation
+        self.bullets = []
+        
+    def rotate(self, target):
+        #Move into seperate function irrespective of rotate
+        for bullet in self.bullets:
+            bullet.move()
+        ###
+        if (self.tank.x - target[0]) == 0:
+            if self.tank.y - target[1] > 0:
+                self.rotation = pi/2
+            else:
+                self.rotation = (3*pi)/2
+        elif target[0] - self.tank.x >= 0:
+            self.rotation = -atan((self.tank.y - target[1]) / (self.tank.x - target[0])) %(2*pi)
+        else:
+            self.rotation = (-atan((self.tank.y - target[1]) / (self.tank.x - target[0])) %(2*pi)) + pi
     def shoot(self):
-        pass
+        self.bullets.append(Bullet(self.tank.x, self.tank.y, self.rotation))
     def draw(self):
-        xOffset =  TURRETOFFSET * cos(self.tank.rotation)
-        yOffset = TURRETOFFSET * -sin(self.tank.rotation)
-        pg.draw.polygon(screen, BLACK, rectanglePoints(self.tank.x + xOffset, self.tank.y + yOffset, TURRETWIDTH, TURRETHEIGHT, self.tank.rotation + (pi/2)))
+        xOffset =  TURRETOFFSET * cos(self.rotation)
+        yOffset = TURRETOFFSET * -sin(self.rotation)
+        pg.draw.polygon(screen, BLACK, rectanglePoints(self.tank.x + xOffset, self.tank.y + yOffset, TURRETWIDTH, TURRETHEIGHT, self.rotation))
+        for bullet in self.bullets:
+            bullet.draw()
         
 
 class Bullet(GameObject):
-    def __init__(self, rotation):
-        rotation = self.rotation
+    def __init__(self, x, y, rotation):
+        super().__init__(x, y)
+        self.rotation = rotation
     def move(self):
-        pass
+        deltaX =  BULLETSPEED * cos(self.rotation) / FPS
+        deltaY = BULLETSPEED * -sin(self.rotation) / FPS
+        self.x += deltaX
+        self.y += deltaY
     def draw(self):
-        pass
+        pg.draw.circle(screen, GREEN, (self.x, self.y), BULLETSIZE)
 
 class Block(GameObject):
     def __init__(self, x, y, width, height):
