@@ -8,6 +8,7 @@ pg.display.set_caption("Tanks")
 clock = pg.time.Clock()
 
 test = PlayerTank(200, 200, BLUE)
+testBlock = Block(300, 300, 200, 10)
 
 running = True
 while running:
@@ -29,6 +30,7 @@ while running:
     screen.fill(WHITE)
     
     test.draw()
+    testBlock.draw()
     
     pg.display.flip()       
 

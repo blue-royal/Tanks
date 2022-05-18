@@ -1,11 +1,11 @@
 import pygame as pg
 
-FPS = 30
+FPS = 60
 WIDTH = 800
 HEIGHT = 550
 
-TANKWIDTH = 20
-TANKHEIGHT = 20
+TANKSIZE = 20
+
 TANKSPEED = 80
 TANKROTATIONSPEED = 3
 
@@ -16,6 +16,7 @@ TURRETROTATIONSPEED = 4
 
 BULLETSPEED = 130
 BULLETSIZE = 4
+BULLETLIFESPAN = 3
 
 #Testing colours
 WHITE = (255, 255, 255)
@@ -23,6 +24,7 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+ORANGE = (255, 165, 0)
 
 
 screen = pg.display.set_mode((WIDTH, HEIGHT))
