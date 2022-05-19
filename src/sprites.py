@@ -1,13 +1,14 @@
 from settings import *
-from math import sin, cos, pi, atan
+from math import sin, cos, pi, atan 
 
-def rectanglePoints(x, y, w, h, rotation):
+def rectanglePoints(x, y, w, h, rotation=0):
     p1 = ((((w * cos(rotation)) + (h * sin(rotation)))/2) + x, ((((h * cos(rotation)) + (-w * sin(rotation)))/2) + y))
     p2 = ((((-w * cos(rotation)) + (h * sin(rotation)))/2) + x, ((((h * cos(rotation)) + (w * sin(rotation)))/2) + y))
     p3 = ((((-w * cos(rotation)) + (-h * sin(rotation)))/2) + x, ((((-h * cos(rotation)) + (w * sin(rotation)))/2) + y))
     p4 = ((((w * cos(rotation)) + (-h * sin(rotation)))/2) + x, ((((-h * cos(rotation)) + (-w * sin(rotation)))/2) + y))
     
     return [p1, p2, p3, p4]
+
 
 class GameObject():
     def __init__(self, x, y):
@@ -50,7 +51,7 @@ class PlayerTank(Tank):
         self.turret.update(pg.mouse.get_pos())
         if pg.mouse.get_pressed()[0] == 1:
             self.turret.shoot()
-
+#
 class AI_Tank(Tank):
     def __init__(self, x, y, colour):
         super().__init__(x, y, colour)
@@ -61,7 +62,6 @@ class Turret():
     def __init__(self, tank):
         self.tank = tank
         self.rotation = self.tank.rotation
-        self.bullets = []
         
     def rotate(self, target):
         if (self.tank.x - target[0]) == 0:
@@ -75,39 +75,61 @@ class Turret():
             self.rotation = (-atan((self.tank.y - target[1]) / (self.tank.x - target[0])) %(2*pi)) + pi
     
     def update(self, target):
-        for bullet in self.bullets:
-            bullet.update()
         self.rotate(target)
     def shoot(self):
-        self.bullets.append(Bullet(self.tank.x, self.tank.y, self.rotation))
+        Bullet(self.tank.x, self.tank.y, self.rotation)
+
     def draw(self):
         xOffset =  TURRETOFFSET * cos(self.rotation)
         yOffset = TURRETOFFSET * -sin(self.rotation)
         pg.draw.polygon(screen, BLACK, rectanglePoints(self.tank.x + xOffset, self.tank.y + yOffset, TURRETWIDTH, TURRETHEIGHT, self.rotation))
-        for bullet in self.bullets:
-            bullet.draw()
+
         
 
 class Bullet(GameObject):
+    bullets = []
+    currentID = 0
     def __init__(self, x, y, rotation):
         super().__init__(x, y)
+        if len(Bullet.bullets) == 0:
+            self.ID = Bullet.currentID
+            Bullet.currentID += 1
+            Bullet.bullets = [[self.ID, self]]
+        else:
+            self.ID = Bullet.currentID
+            Bullet.currentID += 1
+            Bullet.bullets.append([self.ID, self])
         self.rotation = rotation
         self.lifetime = 0
         self.colour = GREEN
-    def move(self):
+    def move(self, env):
         deltaX =  BULLETSPEED * cos(self.rotation) / FPS
         deltaY = BULLETSPEED * -sin(self.rotation) / FPS
         self.x += deltaX
         self.y += deltaY
-    def update(self):
-        self.lifetime += 1
-        if self.lifetime > BULLETLIFESPAN * FPS:
-            self.delete()
-        self.move()
-    def draw(self):
-        pg.draw.circle(screen, self.colour, (self.x, self.y), BULLETSIZE)
+        for block in env:
+            isColliding, dir = block.isCircleColliding(self.x, self.y, BULLETSIZE)
+            if isColliding == True:
+                if dir == VERTICAL:
+                    self.rotation -= (2 * self.rotation) % (2*pi)
+                if dir == HORIZONTAL:
+                    self.rotation = ((self.rotation + pi) - (2 * self.rotation)) % (2*pi)
+    @staticmethod
+    def update(env):
+        for bullet in Bullet.bullets:
+            bullet[1].lifetime += 1
+            if bullet[1].lifetime > BULLETLIFESPAN * FPS:
+                bullet[1].delete()
+            bullet[1].move(env)
+    @staticmethod
+    def draw():
+        for bullet in Bullet.bullets:
+            pg.draw.circle(screen, bullet[1].colour, (bullet[1].x, bullet[1].y), BULLETSIZE)
     def delete(self):
-        self.colour = RED
+        for i, bullet in enumerate(Bullet.bullets):
+            if bullet[0] == bullet[1].ID:
+                Bullet.bullets.pop(i)
+                break
 
 class Block(GameObject):
     def __init__(self, x, y, width, height):
@@ -115,9 +137,56 @@ class Block(GameObject):
         self.width, self.height = width, height
     def isRectColliding (x, y, w, h): # where checkX and chackY are the center of the rectangle
         pass
-    def isCircleColliding(x, y, radius):
-        pass
+    def isCircleColliding(self, x, y, radius):
+        dir = None
+        testX = x
+        testY = y
+        if self.x - (self.width / 2) > x:
+            testX = self.x - (self.width / 2)
+            dir = HORIZONTAL
+        elif self.x + (self.width / 2) < x:
+            testX = self.x + (self.width / 2)
+            dir = HORIZONTAL
+        
+        if self.y - (self.height / 2) > y:
+            testY = self.y - (self.height / 2)
+            dir = VERTICAL
+        elif self.y + (self.height / 2) < y:
+            testY = self.y + (self.height / 2)
+            dir= VERTICAL
+        
+        distance = ((testX - x)**2 + (testY - y)**2)**0.5
+        if distance <= radius:
+            return (True, dir)
+        else:
+            return (False, dir)
+        
     def draw(self):
-        pg.draw.rect(screen, ORANGE, pg.Rect(self.x, self.y, self.width, self.height))
-    def distance(x1, y1, x2, y2):
-        return ((x1-x2)**2 + (y1-y2)**2)**0.5
+        pg.draw.polygon(screen, ORANGE, rectanglePoints(self.x, self.y, self.width, self.height))
+
+# Game class to control collisions and all bullets
+# Level design files
+
+class Game():
+    def __init__(self):
+        self.player = PlayerTank(200, 200, BLUE)
+        self.env = [Block(300, 300, 200, 50)]
+    def run(self):
+        pass
+    def nextLevel(self):
+        pass
+    def update(self):
+        self.player.update()
+        Bullet.update(self.env)
+    def draw(self):
+        # render / draw sprites in correct order
+        screen.fill(WHITE)
+        
+        self.player.draw()
+        if self.env:
+            for block in self.env:
+                block.draw()
+        Bullet.draw()
+        
+        pg.display.flip()   
+

@@ -7,13 +7,11 @@ pg.init()
 pg.display.set_caption("Tanks")
 clock = pg.time.Clock()
 
-test = PlayerTank(200, 200, BLUE)
-testBlock = Block(300, 300, 200, 10)
+game = Game()
 
 running = True
 while running:
     clock.tick(FPS) 
-    
     #gather events   
     events = pg.event.get()
     # check for the X button being pressed
@@ -23,16 +21,9 @@ while running:
         elif event.type == pg.KEYDOWN:
             if event.key == pg.K_ESCAPE:
                 running = False
-    
-    # update sprites
-    test.update()
-    # render / draw sprites in correct order
-    screen.fill(WHITE)
-    
-    test.draw()
-    testBlock.draw()
-    
-    pg.display.flip()       
+                
+    game.update()
+    game.draw()
 
 pg.quit()
 exit()

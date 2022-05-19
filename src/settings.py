@@ -1,3 +1,4 @@
+from matplotlib.ft2font import HORIZONTAL
 import pygame as pg
 
 FPS = 60
@@ -17,6 +18,10 @@ TURRETROTATIONSPEED = 4
 BULLETSPEED = 130
 BULLETSIZE = 4
 BULLETLIFESPAN = 3
+
+
+VERTICAL = 0
+HORIZONTAL = 1
 
 #Testing colours
 WHITE = (255, 255, 255)
