@@ -23,15 +23,29 @@ class Tank(GameObject):
         self.colour = colour
         self.turret = Turret(self)
         
-    def rotate(self, speed):
-        self.rotation += speed / FPS
-        self.rotation = self.rotation % (2 * pi)
+    def rotate(self, speed, env):
+        tempRotation = self.rotation + (speed / FPS)
+        tempRotation = tempRotation % (2 * pi)
+        if not self.checkEnvironment(self.x, self.y, self.rotation, env):
+            self.rotation = tempRotation
         
-    def move(self, speed):
+        
+    def move(self, speed, env):
         delta_x = speed * cos(self.rotation) / FPS
         delta_y = speed * -sin(self.rotation) / FPS
-        self.x += delta_x
-        self.y += delta_y
+        testX = self.x + delta_x
+        testY = self.y + delta_y
+        if not self.checkEnvironment(testX, testY, self.rotation, env):
+            self.x += delta_x
+            self.y += delta_y
+    
+    def checkEnvironment(self, x, y, rotation, env):
+        points = rectanglePoints(x, y, TANKSIZE, TANKSIZE, rotation)
+        for block in env:
+            for point in points:
+                if block.isPointInside(point[0], point[1]):
+                    return True
+        return False
 
         
     def draw(self):
@@ -49,16 +63,16 @@ class Tank(GameObject):
 class PlayerTank(Tank):
     def __init__(self, x, y, colour):
         super().__init__(x, y, colour)
-    def update(self):
+    def update(self, env):
         keys = pg.key.get_pressed()
         if keys[pg.K_a]:
-            self.rotate(TANKROTATIONSPEED) # change arbitrary value
+            self.rotate(TANKROTATIONSPEED, env) # change arbitrary value
         if keys[pg.K_d]:
-            self.rotate(-TANKROTATIONSPEED) # change arbitrary value
+            self.rotate(-TANKROTATIONSPEED, env) # change arbitrary value
         if keys[pg.K_w]:
-            self.move(TANKSPEED) # change arbitrary value
+            self.move(TANKSPEED, env) # change arbitrary value
         if keys[pg.K_s]:
-            self.move(-TANKSPEED) # change arbitrary value
+            self.move(-TANKSPEED, env) # change arbitrary value
         self.turret.update(pg.mouse.get_pos())
         if pg.mouse.get_pressed()[0] == 1:
             self.turret.shoot()
@@ -188,8 +202,11 @@ class Block(GameObject):
     def __init__(self, x, y, width, height):
         GameObject.__init__(self, x, y)
         self.width, self.height = width, height
-    def isRectColliding (x, y, w, h): # where checkX and chackY are the center of the rectangle
-        pass
+    def isPointInside (self, x, y): # check if a x and y point are both within the bounds of the rectangle
+        if x > self.x - (self.width/2) and x < self.x + (self.width/2):
+            if y > self.y - (self.height/2) and y < self.y + (self.height/2):
+                return True
+        return False
     def isCircleColliding(self, x, y, radius):
         dir = None
         testX = x
@@ -230,7 +247,7 @@ class Game():
     def nextLevel(self):
         pass
     def update(self):
-        self.player.update()
+        self.player.update(self.env)
         Bullet.update(self.env)
     def draw(self):
         # render / draw sprites in correct order
