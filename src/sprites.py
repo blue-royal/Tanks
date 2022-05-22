@@ -1,18 +1,22 @@
 from settings import *
 from math import sin, cos, pi, atan 
+from random import shuffle
 
+# Apply rotation matrix of a given rotation to the given width and height then add the center of rotation
 def rectanglePoints(x, y, w, h, rotation=0):
     p1 = ((((w * cos(rotation)) + (h * sin(rotation)))/2) + x, ((((h * cos(rotation)) + (-w * sin(rotation)))/2) + y))
     p2 = ((((-w * cos(rotation)) + (h * sin(rotation)))/2) + x, ((((h * cos(rotation)) + (w * sin(rotation)))/2) + y))
     p3 = ((((-w * cos(rotation)) + (-h * sin(rotation)))/2) + x, ((((-h * cos(rotation)) + (w * sin(rotation)))/2) + y))
     p4 = ((((w * cos(rotation)) + (-h * sin(rotation)))/2) + x, ((((-h * cos(rotation)) + (-w * sin(rotation)))/2) + y))
-    
+    # Returns points as tuples
     return [p1, p2, p3, p4]
 
-
+# Every game object requires an x, y position and a draw and update function function
 class GameObject():
     def __init__(self, x, y):
         self.x, self.y = x, y
+    def update():
+        print("please overide this update funciton")
     def draw():
         print("Override default draw function")
 
@@ -22,37 +26,47 @@ class Tank(GameObject):
         self.rotation = 0
         self.colour = colour
         self.turret = Turret(self)
-        
+    
     def rotate(self, speed, env):
         tempRotation = self.rotation + (speed / FPS)
         tempRotation = tempRotation % (2 * pi)
+        # Check if rotation causes a collision with any blocks
         if not self.checkEnvironment(self.x, self.y, self.rotation, env):
+            # update the rotation to be the newly calculated
             self.rotation = tempRotation
         
         
     def move(self, speed, env):
+        # calculate the change in x, y co-ordinates using the rotation
         delta_x = speed * cos(self.rotation) / FPS
         delta_y = speed * -sin(self.rotation) / FPS
-        testX = self.x + delta_x
-        testY = self.y + delta_y
-        if not self.checkEnvironment(testX, testY, self.rotation, env):
+        # store new coordinate in temporary variale to check for collisions with any blocks
+        tempX = self.x + delta_x
+        tempY = self.y + delta_y
+        if not self.checkEnvironment(tempX, tempY, self.rotation, env):
             self.x += delta_x
             self.y += delta_y
     
+    # The function that determines if any tank vertices are inside the block
     def checkEnvironment(self, x, y, rotation, env):
+        # get corners of the tanks coordinates
         points = rectanglePoints(x, y, TANKSIZE, TANKSIZE, rotation)
         for block in env:
             for point in points:
+                # check if those points are inside the block 
                 if block.isPointInside(point[0], point[1]):
                     return True
+        # if no points are inside the blocks then return false
         return False
 
-        
+    # draw the tank using its corner co-ordinates and after the tank is drawn, draw the turret
     def draw(self):
         pg.draw.polygon(screen, self.colour, rectanglePoints(self.x, self.y, TANKSIZE, TANKSIZE, self.rotation))
         self.turret.draw()
-        
+    
+    # check if any of the bullets are colliding with the tank
     def bulletsCollide(self, x, y, radius):
+        # model the tank as a circle for collision detection purposes
         distance = ((self.x - x)**2 + (self.y - y)**2)**0.5
         if distance <= radius + TANKSIZE/2:
             return True
@@ -64,38 +78,158 @@ class PlayerTank(Tank):
     def __init__(self, x, y, colour):
         super().__init__(x, y, colour)
     def update(self, env):
+        # get key event information to determine who to move and orient tank
+        # when WASD keys are pressed
         keys = pg.key.get_pressed()
         if keys[pg.K_a]:
-            self.rotate(TANKROTATIONSPEED, env) # change arbitrary value
+            self.rotate(TANKROTATIONSPEED, env) 
         if keys[pg.K_d]:
-            self.rotate(-TANKROTATIONSPEED, env) # change arbitrary value
+            self.rotate(-TANKROTATIONSPEED, env)
         if keys[pg.K_w]:
-            self.move(TANKSPEED, env) # change arbitrary value
+            self.move(TANKSPEED, env) 
         if keys[pg.K_s]:
-            self.move(-TANKSPEED, env) # change arbitrary value
+            self.move(-TANKSPEED, env) 
+        #update turret position based on the mouse position
         self.turret.update(pg.mouse.get_pos())
+        # shoot if the right mouse button is pressed
         if pg.mouse.get_pressed()[0] == 1:
             self.turret.shoot()
             
+        # Check if any bullets are colliding with the tank
         for bullet in Bullet.bullets:
             if self.bulletsCollide(bullet[1].x, bullet[1].y, BULLETSIZE):
+                bullet[1].delete()
+                # if a collision has occured, then the tank is destroyed
                 self.dead()
+    # if player tank is dead trigger, the death screen
     def dead(self):
         print("The end")
+        # trigger death screen
 #
 class AI_Tank(Tank):
-    def __init__(self, x, y, colour):
+    def __init__(self, x, y, colour, bases):
         super().__init__(x, y, colour)
-    def update(self):
-        pass
+        self.targetPosX = bases[0][0]
+        self.targetPosY = bases[0][1]
+        self.bases = bases
+        self.newTargetPos = False
+        self.wasInProimity = False
+    
+    # Run AI
+    def update(self, playerX, playerY, env):
+        # If bullet collides with AI tank the destroy the tank 
+        state = self.chooseState(playerX, playerY, env)
+        if state == ATTACK_EVADE:
+            self.newTargetPos = True
+            # aim at player and shoot
+            if self.turret.update((playerX, playerY)):
+                self.turret.shoot()
+            # move out of the way of incoming bullets
+            
+        if state == CHASE_BLOCK:
+            self.newTargetPos = True
+            self.rotate((playerX, playerY))
+            self.move(TANKSPEED, env)
+            
+        if state == SEARCH:
+            # if the distance to the target position is less than 50 pixels pick a new aim
+            if (self.x - self.targetPosX) **2 + (self.y - self.targetPosY)**2 < BASEPROXIMITY**2:
+                if not self.wasInProimity:
+                    self.newTargetPos = True
+                self.wasInProimity = True
+            else:
+                self.wasInProimity = False
+                
+            
+            # set a new target position that is in the line of sight
+            if self.newTargetPos == True:
+                self.newTargetPos = False
+                # shuffle possible bases so a new base is always random
+                shuffle(self.bases)
+                for base in self.bases:
+                    if self.lineOfSight(base[0], base[1], env) and not (self.targetPosX == base[0] and self.targetPosY == base[1]):
+                        self.targetPosX = base[0]
+                        self.targetPosY = base[1]
+                        break
+            # rotate towards new position
+            self.rotate((self.targetPosX, self.targetPosY))
+            # move forwards or backwards, whichever's quicker
+            self.move(TANKSPEED, env)
+        
+        for bullet in Bullet.bullets:
+            if self.bulletsCollide(bullet[1].x, bullet[1].y, BULLETSIZE):
+                bullet[1].delete()
+                self.dead()
+                
+    def lineOfSight(self, targetX, targetY, env):
+        #line of sight calc is a possible point of performance issues
+        dirVecX = targetX - self.x
+        dirVecY = targetY - self.y
+        # normalise direction vector
+        magnitude = (dirVecX**2 + dirVecY**2)**0.5
+        dirVecX = dirVecX/magnitude
+        dirVecY = dirVecY/magnitude
+        lineOfSight = True
+        t = 1
+        # iterate through each pixel position on the line and check if it collides inside a block
+        while t < magnitude:
+            for block in env:
+                if block.isPointInside(dirVecX*t + self.x, dirVecY * t + self.y):
+                    lineOfSight = False
+                    break
+            t += 1
+        return lineOfSight
+    
+    def chooseState(self, playerX, playerY, env):
+        #Check if there is a line of sight to the player tank
+        if self.lineOfSight(playerX, playerY, env):
+            if (playerX - self.x)**2 + (playerY - self.y) **2 < ATTACKDISTANCE **2:
+                return ATTACK_EVADE
+            else: return CHASE_BLOCK
+        else: return SEARCH
+            
+    def rotate(self, target):
+        # find the target rotation based on the mouse position
+        if (self.x - target[0]) == 0:
+            if self.y - target[1] > 0:
+                targetRotation = pi/2
+            else:
+                targetRotation = (3*pi)/2
+        elif target[0] - self.x >= 0:
+            targetRotation = -atan((self.y - target[1]) / (self.x - target[0])) %(2*pi)
+        else:
+            targetRotation = (-atan((self.y - target[1]) / (self.x - target[0])) + pi)%(2*pi)
+        
+        # Check which direction 
+        if (self.rotation - targetRotation) % (2*pi) < (targetRotation - self.rotation) % (2*pi):
+            if (self.rotation - targetRotation) % (2*pi) <= TANKROTATIONSPEED/FPS:
+                self.rotation = targetRotation
+                return True
+            else:
+                self.rotation -= TANKROTATIONSPEED/FPS
+                return False
+        else:
+            if (targetRotation - self.rotation) % (2*pi) <= TANKROTATIONSPEED/FPS:
+                self.rotation = targetRotation
+                return True
+            else:
+                self.rotation += TANKROTATIONSPEED/FPS
+                return False
+            
+    def dead(self):
+        print("I died")
 
+# Controls shooting and managing the bullets for every tank
 class Turret():
     def __init__(self, tank):
         self.tank = tank
         self.rotation = self.tank.rotation
         self.canReload = RELOADTIME * FPS
-        
+    
+    # Rotate the turret towards the mouse with a maximum rotation speed
+    # Return true if aiming directly at target
     def rotate(self, target):
+        # find the target rotation based on the mouse position
         if (self.tank.x - target[0]) == 0:
             if self.tank.y - target[1] > 0:
                 targetRotation = pi/2
@@ -106,24 +240,26 @@ class Turret():
         else:
             targetRotation = (-atan((self.tank.y - target[1]) / (self.tank.x - target[0])) + pi)%(2*pi)
         
-        # find the min of self.rotation - targetROtation and targetRotation - self.rotation both mod 2pi
-        # then check if that difference is more than the rotation max speed, if not then set self.rotation = targetRotation
-        # else increment self.rotation in the necessary direction and mod 2pi
-        if (self.rotation - targetRotation) % (2*pi) > (targetRotation - self.rotation) % (2*pi):
-            if (self.rotation - targetRotation) % (2*pi) < TURRETROTATIONSPEED/FPS:
+        # Check which direction 
+        if (self.rotation - targetRotation) % (2*pi) < (targetRotation - self.rotation) % (2*pi):
+            if (self.rotation - targetRotation) % (2*pi) <= TURRETROTATIONSPEED/FPS:
                 self.rotation = targetRotation
-            else:
-                self.rotation += TURRETROTATIONSPEED/FPS
-        else:
-            if (targetRotation - self.rotation) % (2*pi) < TURRETROTATIONSPEED/FPS:
-                self.rotation = targetRotation
+                return True
             else:
                 self.rotation -= TURRETROTATIONSPEED/FPS
+                return False
+        else:
+            if (targetRotation - self.rotation) % (2*pi) <= TURRETROTATIONSPEED/FPS:
+                self.rotation = targetRotation
+                return True
+            else:
+                self.rotation += TURRETROTATIONSPEED/FPS
+                return False
             
     
     def update(self, target):
-        self.rotate(target)
         self.canReload += 1
+        return self.rotate(target)
     def shoot(self):
         if self.canReload >= RELOADTIME * FPS:
             startX = self.tank.x + (cos(self.rotation) * (TANKSIZE))
@@ -234,30 +370,5 @@ class Block(GameObject):
     def draw(self):
         pg.draw.polygon(screen, ORANGE, rectanglePoints(self.x, self.y, self.width, self.height))
 
-# Game class to control collisions and all bullets
-# Level design files
 
-class Game():
-    def __init__(self):
-        self.player = PlayerTank(200, 200, BLUE)
-        self.env = [Block(300, 300, 200, 50)]
-    def run(self):
-        self.update()
-        self.draw()
-    def nextLevel(self):
-        pass
-    def update(self):
-        self.player.update(self.env)
-        Bullet.update(self.env)
-    def draw(self):
-        # render / draw sprites in correct order
-        screen.fill(WHITE)
-        
-        self.player.draw()
-        if self.env:
-            for block in self.env:
-                block.draw()
-        Bullet.draw()
-        
-        pg.display.flip()   
 

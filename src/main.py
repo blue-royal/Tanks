@@ -1,12 +1,15 @@
 import pygame as pg
-from sprites import *
+from game import *
 from ui import *
 from sys import exit
 
+# Set up pygame window
 pg.init()
 pg.display.set_caption("Tanks")
 clock = pg.time.Clock()
 
+# Initialise the game class
+mainscreen = MenuScreen()
 game = Game()
 
 running = True
@@ -18,11 +21,19 @@ while running:
     for event in events:        
         if event.type == pg.QUIT:
             running = False
+        # check if the escape  button is pressed end program if it is
         elif event.type == pg.KEYDOWN:
             if event.key == pg.K_ESCAPE:
                 running = False
                 
-    game.run()
-    
+    # Entry point to the game  
+    # game.run()
+    if MenuScreen.state == MENU:
+        mainscreen.run()
+    elif MenuScreen.state == QUIT:
+        running = False
+    elif MenuScreen.state == PLAY:
+        game.run()
+# Delete window and stop executing program
 pg.quit()
 exit()

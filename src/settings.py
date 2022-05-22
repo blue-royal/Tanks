@@ -5,6 +5,8 @@ FPS = 60
 WIDTH = 800
 HEIGHT = 550
 
+RESTARTBUFFER = 0.5
+
 TANKSIZE = 20
 
 TANKSPEED = 80
@@ -25,6 +27,20 @@ BULLETLIFESPAN = 4
 VERTICAL = 0
 HORIZONTAL = 1
 
+# Level constants
+ENEMIES = 1
+ENVIRONMENT = 2
+STARTPOS = 3
+
+# AI Tank states
+
+ATTACK_EVADE = 0
+CHASE_BLOCK = 1
+SEARCH = 2
+
+ATTACKDISTANCE = 300
+BASEPROXIMITY = 100
+
 #Testing colours
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -32,6 +48,11 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 ORANGE = (255, 165, 0)
+
+# MENU states
+MENU = 0
+QUIT = 1
+PLAY = 2
 
 
 screen = pg.display.set_mode((WIDTH, HEIGHT))
