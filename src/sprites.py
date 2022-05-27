@@ -1,6 +1,3 @@
-from turtle import distance
-
-from numpy import append
 from settings import *
 from math import sin, cos, pi, atan
 from random import shuffle
