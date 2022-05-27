@@ -1,16 +1,16 @@
-from matplotlib.ft2font import HORIZONTAL
 import pygame as pg
-
+# Used to get screen dimensions
 import ctypes
 user32 = ctypes.windll.user32
 
 WIDTH = user32.GetSystemMetrics(0) # window width
 HEIGHT = user32.GetSystemMetrics(1) # window height
 
+# Game control constants
 FPS = 60
-
 RESTARTBUFFER = 0.5
 
+# Tank constants
 TANKSIZE = 20
 
 TANKSPEED = 80
@@ -18,17 +18,19 @@ TANKROTATIONSPEED = 3
 
 RELOADTIME = 0.25
 
+# Turret constants
 TURRETWIDTH = 17
 TURRETHEIGHT = 5
 TURRETOFFSET = 8
 TURRETROTATIONSPEED = 5
 MAXBULLETS = 7
 
+# Bullet constants
 BULLETSPEED = 130
 BULLETSIZE = 4
 BULLETLIFESPAN = 4
 
-
+# constants used in collision detection for readability
 VERTICAL = 0
 HORIZONTAL = 1
 
