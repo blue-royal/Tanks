@@ -30,7 +30,6 @@ while running:
                 running = False
                 
     # Entry point to the game  
-    # game.run()
     if MenuScreen.state == MENU:
         mainscreen.run()
     elif MenuScreen.state == QUIT:
