@@ -2,8 +2,6 @@ from sprites import *
 from settings import *
 from ui import *
 from copy import deepcopy
-# Game class to control collisions and all bullets
-# Level design files
 
 def pauseGame():
     MenuScreen.state = MENU
@@ -11,12 +9,18 @@ def pauseGame():
 
 
 class Game():
+    # to add a delay when starting the game
     counter = 0
-    def __init__(self):   
+    def __init__(self):  
+        # Level creation data that is used to load levels 
         level1 = {
-            ENEMIES : [AI_Tank(WIDTH-50, HEIGHT/2, RED, [(WIDTH-50, HEIGHT/2), (WIDTH-100, HEIGHT/6), (WIDTH-100, 5*HEIGHT/6), (2*WIDTH/3, 50), (2*WIDTH/3, HEIGHT-50), (WIDTH/2, HEIGHT/2)]),
-                       AI_Tank(WIDTH/2, HEIGHT/2, RED, [(WIDTH/2, HEIGHT/2), (WIDTH-150, HEIGHT/6), (WIDTH-150, 5*HEIGHT/6), (2*WIDTH/3, 100), (2*WIDTH/3, HEIGHT-100), (WIDTH/2, HEIGHT/2), (WIDTH/3, 100), (WIDTH/3, HEIGHT-100)])],
-            ENVIRONMENT : [Block(WIDTH/4, HEIGHT/2, 50, 350), Block(3*WIDTH/4, HEIGHT/2, 50, 350), Block(WIDTH/2, HEIGHT/7, 50, 200), Block(WIDTH/2, 6*HEIGHT/7, 50, 200)],
+            ENEMIES : [AI_Tank(WIDTH-50, HEIGHT/2, RED, 
+                               [(WIDTH-50, HEIGHT/2), (WIDTH-100, HEIGHT/6), (WIDTH-100, 5*HEIGHT/6), (2*WIDTH/3, 50), (2*WIDTH/3, HEIGHT-50), (WIDTH/2, HEIGHT/2)]),
+                       AI_Tank(WIDTH/2, HEIGHT/2, RED, 
+                               [(WIDTH/2, HEIGHT/2), (WIDTH-150, HEIGHT/6), (WIDTH-150, 5*HEIGHT/6), (2*WIDTH/3, 100), 
+                                (2*WIDTH/3, HEIGHT-100), (WIDTH/2, HEIGHT/2), (WIDTH/3, 100), (WIDTH/3, HEIGHT-100)])],
+            ENVIRONMENT : [Block(WIDTH/4, HEIGHT/2, 50, 350), Block(3*WIDTH/4, HEIGHT/2, 50, 350), 
+                           Block(WIDTH/2, HEIGHT/7, 50, 200), Block(WIDTH/2, 6*HEIGHT/7, 50, 200)],
             STARTPOS : [50, HEIGHT/2]
         }
         level2 = {
@@ -29,12 +33,13 @@ class Game():
         }
         
         self.levels = [level1, level2,level1]
-        
+    # Takes a UI element Butto and allows the player to pause the game
         self.pauseButton = Button(3, 3, 25, 25, (50, 250, 220), "P", 20, 0, 0, pauseGame)
         self.level = 1
         self.loadLevel()
         
     def run(self):
+        # Add a delay before starting the game
         if Game.counter < RESTARTBUFFER * FPS:
             Game.counter += 1
         else:
@@ -44,9 +49,11 @@ class Game():
             
     def loadLevel(self):
         Game.counter = 0
+        # If the last level is completed, restart the game
         if len(self.levels) == self.level:
             MenuScreen.state = MENU
             self.level = 1
+        # load the latest level into the relevent variables
         currentLevel = deepcopy(self.levels[self.level-1])
         self.player = PlayerTank(currentLevel[STARTPOS][0], currentLevel[STARTPOS][1], BLUE)
         self.enemies = currentLevel[ENEMIES]
@@ -58,6 +65,7 @@ class Game():
         self.env.append(Block(WIDTH, HEIGHT/2, 20, HEIGHT + 20))
         
     def update(self):
+        #update the player, enemies, bullets and button objects
         self.player.update(self.env)
         for enemy in self.enemies:
             if enemy.alive:
@@ -65,6 +73,7 @@ class Game():
         self.pauseButton.update()
         Bullet.update(self.env)
         
+        # Check if the game is over or the level has been completed
         if PlayerTank.alive == False:
             self.loadLevel()
         elif self.checkWin():
@@ -88,6 +97,7 @@ class Game():
         
         pg.display.flip()   
     
+    # If no more enemies are alive then return true because the player has won
     def checkWin(self):
         for enemy in self.enemies:
             if enemy.alive:
