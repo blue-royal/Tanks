@@ -15,7 +15,8 @@ class Game():
         # Level creation data that is used to load levels 
         level1 = {
             ENEMIES : [AI_Tank(WIDTH-50, HEIGHT/2, RED, 
-                               [(WIDTH-50, HEIGHT/2), (WIDTH-100, HEIGHT/6), (WIDTH-100, 5*HEIGHT/6), (2*WIDTH/3, 50), (2*WIDTH/3, HEIGHT-50), (WIDTH/2, HEIGHT/2)]),
+                               [(WIDTH-50, HEIGHT/2), (WIDTH-100, HEIGHT/6), (WIDTH-100, 5*HEIGHT/6), 
+                                (2*WIDTH/3, 50), (2*WIDTH/3, HEIGHT-50), (WIDTH/2, HEIGHT/2)]),
                        AI_Tank(WIDTH/2, HEIGHT/2, RED, 
                                [(WIDTH/2, HEIGHT/2), (WIDTH-150, HEIGHT/6), (WIDTH-150, 5*HEIGHT/6), (2*WIDTH/3, 100), 
                                 (2*WIDTH/3, HEIGHT-100), (WIDTH/2, HEIGHT/2), (WIDTH/3, 100), (WIDTH/3, HEIGHT-100)])],
