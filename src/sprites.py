@@ -334,7 +334,7 @@ class Turret():
         else:
             targetRotation = (-atan((self.tank.y - target[1]) / (self.tank.x - target[0])) + pi)%(2*pi)
         
-        # Check which direction 
+        # Check which direction and ensure the turret moves with a maximum speed
         if (self.rotation - targetRotation) % (2*pi) < (targetRotation - self.rotation) % (2*pi):
             if (self.rotation - targetRotation) % (2*pi) <= TURRETROTATIONSPEED/FPS:
                 self.rotation = targetRotation
@@ -357,23 +357,25 @@ class Turret():
     
     def shoot(self):
         toRemove = []
+        # add a new bullet with a distinct ID to the list of bullets linked with this turret
         for i, id in enumerate(self.myBullets):
             valid = False
             for bullet in Bullet.bullets:
                 if bullet[0] == id:
                     valid = True
+            # remove dead bullets
             if valid == False:
                 toRemove.append(i)
         for index in toRemove[::-1]:
             self.myBullets.pop(index)
-        
+        # create a new bullet if the reload time has expired and there are no more than MAXBULLETS already
         if self.canReload >= RELOADTIME * FPS and len(self.myBullets) < MAXBULLETS:
             startX = self.tank.x + (cos(self.rotation) * (TANKSIZE))
             startY = self.tank.y - (sin(self.rotation) * (TANKSIZE))
             Bullet(startX, startY, self.rotation)
             self.myBullets.append(Bullet.bullets[-1][0])
             self.canReload = 0
-
+    #  draw with an offset so it is not central to the tank position
     def draw(self):
         xOffset =  TURRETOFFSET * cos(self.rotation)
         yOffset = TURRETOFFSET * -sin(self.rotation)
@@ -384,6 +386,7 @@ class Turret():
 class Bullet(GameObject):
     bullets = []
     currentID = 0
+    # control all bullets that have been instantiated in the game
     def __init__(self, x, y, rotation):
         super().__init__(x, y)
         if len(Bullet.bullets) == 0:
@@ -398,7 +401,7 @@ class Bullet(GameObject):
         self.lifetime = 0
         self.colour = GREEN
         self.hasBounced = False
-        
+    # Move in the direction given by the rotation of the turret
     def move(self, env):
         deltaX =  BULLETSPEED * cos(self.rotation) / FPS
         deltaY = BULLETSPEED * -sin(self.rotation) / FPS
@@ -432,23 +435,26 @@ class Bullet(GameObject):
                     bullet[1].delete()
                     self.delete()
                     break
+    # Static methods for controlling all bullets
     @staticmethod
     def update(env):
         for bullet in Bullet.bullets:
             bullet[1].lifetime += 1
+            # if a bullet is around too long then delete it
             if bullet[1].lifetime > BULLETLIFESPAN * FPS:
                 bullet[1].delete()
             bullet[1].move(env)
+    # draw all bullets
     @staticmethod
     def draw():
         for bullet in Bullet.bullets:
             pg.draw.circle(screen, bullet[1].colour, (bullet[1].x, bullet[1].y), BULLETSIZE)
-            
+    # in between rounds this is used to remove all bullets from the game
     @staticmethod
     def clear():
         Bullet.bullets = []
         Bullet.currentID = 0
-            
+    # delete a single bullet based on the ID
     def delete(self):
         for i, bullet in enumerate(Bullet.bullets):
             if bullet[0] == self.ID:
@@ -464,6 +470,7 @@ class Block(GameObject):
             if y > self.y - (self.height/2) and y < self.y + (self.height/2):
                 return True
         return False
+    # Code from the function isCIrcleColliding is from: https://jeffreythompson.org/collision-detection/circle-rect.php
     def isCircleColliding(self, x, y, radius):
         dir = None
         testX = x
@@ -487,9 +494,6 @@ class Block(GameObject):
             return (True, dir)
         else:
             return (False, dir)
-        
+    # draw the block
     def draw(self):
         pg.draw.polygon(screen, ORANGE, rectanglePoints(self.x, self.y, self.width, self.height))
-
-
-
