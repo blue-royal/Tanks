@@ -74,7 +74,7 @@ class Game():
         self.pauseButton.update()
         Bullet.update(self.env)
         
-        # Check if the game is over or the level has been completed
+        # Check if the game is over or the level has been completed 
         if PlayerTank.alive == False:
             self.loadLevel()
         elif self.checkWin():
@@ -93,9 +93,7 @@ class Game():
             for block in self.env:
                 block.draw()
         Bullet.draw()
-        
         self.pauseButton.draw()
-        
         pg.display.flip()   
     
     # If no more enemies are alive then return true because the player has won
