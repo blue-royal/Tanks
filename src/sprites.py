@@ -153,8 +153,6 @@ class AI_Tank(Tank):
         else:
             return [True, closest[0][0], closest[0][1]]
     
-    
-    
     # Run AI
     def update(self, playerX, playerY, env):
         
@@ -316,7 +314,6 @@ class Turret():
         self.rotation = self.tank.rotation
         self.canReload = RELOADTIME * FPS
         self.myBullets = []
-    
     # Rotate the turret towards the mouse with a maximum rotation speed
     # Return true if aiming directly at target
     def rotate(self, target):
@@ -330,7 +327,6 @@ class Turret():
             targetRotation = -atan((self.tank.y - target[1]) / (self.tank.x - target[0])) %(2*pi)
         else:
             targetRotation = (-atan((self.tank.y - target[1]) / (self.tank.x - target[0])) + pi)%(2*pi)
-        
         # Check which direction and ensure the turret moves with a maximum speed
         if (self.rotation - targetRotation) % (2*pi) < (targetRotation - self.rotation) % (2*pi):
             if (self.rotation - targetRotation) % (2*pi) <= TURRETROTATIONSPEED/FPS:
@@ -478,7 +474,6 @@ class Block(GameObject):
         elif self.x + (self.width / 2) < x:
             testX = self.x + (self.width / 2)
             dir = HORIZONTAL
-        
         if self.y - (self.height / 2) > y:
             testY = self.y - (self.height / 2)
             dir = VERTICAL
