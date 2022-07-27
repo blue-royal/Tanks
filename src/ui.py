@@ -63,9 +63,9 @@ class MenuScreen():
     state = MENU
     def __init__(self):
         # create the objects of the UI and specify size and position
-        self.title = Text("Tanks!", 50)
-        self.playButton = Button(WIDTH/2 - 250, 200, 500, 150, (100, 200, 50), "Play", 50, 220, 50, playGame)
-        self.quitButton = Button(WIDTH/2 - 250, 450, 500, 150, (100, 200, 50), "Quit", 50, 220, 50, quitGame)
+        self.title = Text("Tanks!", 75)
+        self.playButton = Button(WIDTH/2 - 375, 300, 750, 225, (100, 200, 50), "Play", 75, 330, 75, playGame)
+        self.quitButton = Button(WIDTH/2 - 375, 675, 750, 225, (100, 200, 50), "Quit", 75, 330, 75, quitGame)
     # Update relevant UI objects
     def update(self):
         self.playButton.update()
@@ -75,7 +75,7 @@ class MenuScreen():
         screen.fill(WHITE)
         self.playButton.draw()
         self.quitButton.draw()
-        self.title.draw(WIDTH/2-50, 50)
+        self.title.draw(WIDTH/2-75, 75)
         pg.display.flip()
     # update objects first then render
     def run(self):

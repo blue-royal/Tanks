@@ -14,28 +14,54 @@ class Game():
     def __init__(self):  
         # Level creation data that is used to load levels 
         level1 = {
-            ENEMIES : [AI_Tank(WIDTH-50, HEIGHT/2, RED, 
-                               [(WIDTH-50, HEIGHT/2), (WIDTH-100, HEIGHT/6), (WIDTH-100, 5*HEIGHT/6), 
-                                (2*WIDTH/3, 50), (2*WIDTH/3, HEIGHT-50), (WIDTH/2, HEIGHT/2)]),
+            ENEMIES : [AI_Tank(WIDTH-75, HEIGHT/2, RED, 
+                               [(WIDTH-75, HEIGHT/2), (WIDTH-150, HEIGHT/6), (WIDTH-150, 5*HEIGHT/6), 
+                                (2*WIDTH/3, 75), (2*WIDTH/3, HEIGHT-75), (WIDTH/2, HEIGHT/2)]),
                        AI_Tank(WIDTH/2, HEIGHT/2, RED, 
-                               [(WIDTH/2, HEIGHT/2), (WIDTH-150, HEIGHT/6), (WIDTH-150, 5*HEIGHT/6), (2*WIDTH/3, 100), 
-                                (2*WIDTH/3, HEIGHT-100), (WIDTH/2, HEIGHT/2), (WIDTH/3, 100), (WIDTH/3, HEIGHT-100)])],
-            ENVIRONMENT : [Block(WIDTH/4, HEIGHT/2, 50, 350), Block(3*WIDTH/4, HEIGHT/2, 50, 350), 
-                           Block(WIDTH/2, HEIGHT/7, 50, 200), Block(WIDTH/2, 6*HEIGHT/7, 50, 200)],
-            STARTPOS : [50, HEIGHT/2]
+                               [(WIDTH/2, HEIGHT/2), (WIDTH-225, HEIGHT/6), (WIDTH-225, 5*HEIGHT/6), (2*WIDTH/3, 150), 
+                                (2*WIDTH/3, HEIGHT-150), (WIDTH/2, HEIGHT/2), (WIDTH/3, 150), (WIDTH/3, HEIGHT-150)])],
+            ENVIRONMENT : [Block(WIDTH/4, HEIGHT/2, 75, 525), Block(3*WIDTH/4, HEIGHT/2, 75, 525), 
+                           Block(WIDTH/2, HEIGHT/7, 75, 300), Block(WIDTH/2, 6*HEIGHT/7, 75, 300)],
+            STARTPOS : [75, HEIGHT/2]
         }
         level2 = {
-            ENEMIES : [AI_Tank(3*WIDTH/4, HEIGHT/4, RED, [(3*WIDTH/4, HEIGHT/4), (WIDTH-60, 60), (WIDTH/2, 50), (WIDTH-50, HEIGHT/2)]),
-                       AI_Tank(WIDTH/4, 3*HEIGHT/4, RED, [(WIDTH/4, 3*HEIGHT/4), (60,HEIGHT-60), (50, HEIGHT/2), (WIDTH/2, HEIGHT - 50)]),
-                       AI_Tank(WIDTH/2, HEIGHT-50, RED, [(WIDTH/2, HEIGHT-50), (4*WIDTH/5, HEIGHT-100), (4*WIDTH/5-40, 4*HEIGHT/5-40)]),
-                       AI_Tank(WIDTH-50, HEIGHT/2, RED, [(WIDTH-50, HEIGHT/2), (WIDTH-100, 4*HEIGHT/5), (4*WIDTH/5+40, 4*HEIGHT/5+40)])],
+            ENEMIES : [AI_Tank(3*WIDTH/4, HEIGHT/4, RED, [(3*WIDTH/4, HEIGHT/4), (WIDTH-90, 90), (WIDTH/2, 75), (WIDTH-75, HEIGHT/2)]),
+                       AI_Tank(WIDTH/4, 3*HEIGHT/4, RED, [(WIDTH/4, 3*HEIGHT/4), (90,HEIGHT-90), (75, HEIGHT/2), (WIDTH/2, HEIGHT - 75)]),
+                       AI_Tank(WIDTH/2, HEIGHT-75, RED, [(WIDTH/2, HEIGHT-75), (4*WIDTH/5, HEIGHT-150), (4*WIDTH/5-60, 4*HEIGHT/5-60)]),
+                       AI_Tank(WIDTH-75, HEIGHT/2, RED, [(WIDTH-75, HEIGHT/2), (WIDTH-150, 4*HEIGHT/5), (4*WIDTH/5+60, 4*HEIGHT/5+60)])],
             ENVIRONMENT : [Block(WIDTH/2, HEIGHT/2, 3*WIDTH/5, 75), Block(WIDTH/2, HEIGHT/2, 75, 3*HEIGHT/5)],
             STARTPOS : [WIDTH/4, HEIGHT/4]
         }
+        simpleLevel = {
+            ENEMIES : [],
+            ENVIRONMENT : [],
+            STARTPOS : [WIDTH/2, HEIGHT/2]
+        }
         
-        self.levels = [level1, level2,level1]
+        
+        oneEnemyLevel = {
+            ENEMIES : [AI_Tank(WIDTH/2 + 300, HEIGHT/2, RED, [(WIDTH/2 + 300, HEIGHT/2)])],
+            ENVIRONMENT : [],
+            STARTPOS : [WIDTH/2-300, HEIGHT/2]
+        }
+        oneBlockLevel = {
+            ENEMIES : [],
+            ENVIRONMENT : [Block(WIDTH/2 + 150, HEIGHT/2, 200, 300)],
+            STARTPOS : [WIDTH/2 - 150, HEIGHT/2]
+        }
+        ais = []
+        for i in range(100):
+            ais.append(AI_Tank(3*WIDTH/4 + (5*i), HEIGHT/4 + (5*i), RED, [(3*WIDTH/4 + (5*i), HEIGHT/4 + (5*i)), (WIDTH-90, 90 + (5*i)), (WIDTH/2 + (5*i), 75 + (5*i)), (WIDTH-75 - (5*i), HEIGHT/2 + (5*i))]))
+        
+        massAIlevel = {
+            ENEMIES : ais ,
+            ENVIRONMENT : [Block(WIDTH/2 - 500, HEIGHT/2, 100, HEIGHT- 200)],
+            STARTPOS : [WIDTH/2 - 650, HEIGHT/2]
+        }
+        
+        self.levels = [massAIlevel]
     # Takes a UI element Butto and allows the player to pause the game
-        self.pauseButton = Button(3, 3, 25, 25, (50, 250, 220), "P", 20, 0, 0, pauseGame)
+        self.pauseButton = Button(4, 4, 37, 37, (50, 250, 220), "P", 30, 0, 0, pauseGame)
         self.level = 1
         self.loadLevel()
         
@@ -60,10 +86,10 @@ class Game():
         self.enemies = currentLevel[ENEMIES]
         Bullet.clear()
         self.env = currentLevel[ENVIRONMENT]
-        self.env.append(Block(0, HEIGHT/2, 20, HEIGHT))
-        self.env.append(Block(WIDTH/2, 0, WIDTH + 10, 20))
-        self.env.append(Block(WIDTH/2, HEIGHT, WIDTH + 20, 20))
-        self.env.append(Block(WIDTH, HEIGHT/2, 20, HEIGHT + 20))
+        self.env.append(Block(0, HEIGHT/2, 30, HEIGHT))
+        self.env.append(Block(WIDTH/2, 0, WIDTH + 15, 30))
+        self.env.append(Block(WIDTH/2, HEIGHT, WIDTH + 30, 30))
+        self.env.append(Block(WIDTH, HEIGHT/2, 30, HEIGHT + 30))
         
     def update(self):
         #update the player, enemies, bullets and button objects
@@ -98,6 +124,7 @@ class Game():
     
     # If no more enemies are alive then return true because the player has won
     def checkWin(self):
+        # return False
         for enemy in self.enemies:
             if enemy.alive:
                 return False
